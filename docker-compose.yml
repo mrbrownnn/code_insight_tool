@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  # === Vector Database ===
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: code-insight-qdrant
+    ports:
+      - "6333:6333"     # REST API
+      - "6334:6334"     # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # === Self-hosted LLM ===
+  ollama:
+    image: ollama/ollama:latest
+    container_name: code-insight-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # Uncomment below for NVIDIA GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  qdrant_data:
+    driver: local
+  ollama_data:
+    driver: local
