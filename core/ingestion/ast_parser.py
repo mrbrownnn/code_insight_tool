@@ -67,43 +67,20 @@ class ASTParser:
         self._parsers = {}
         self._init_parsers()
 
-    def _init_parsers(self) -> None:
-        try:
-            import tree_sitter as ts
-        except ImportError:
-            logger.error("tree-sitter not installed")
-            return
-
-        for language, module_name in _LANGUAGE_MODULES.items():
-            try:
-                lang_module = __import__(module_name)
-                lang = ts.Language(lang_module.language())
-                parser = ts.Parser(lang)
-                self._parsers[language] = {
-                    "parser": parser,
-                    "language": lang,
-                }
-                logger.info(f"Initialized tree-sitter parser for {language}")
-            except Exception as e:
-                logger.warning(f"Failed to init parser for {language}: {e}")
-
     def parse_file(
         self,
         file_path: Path,
         language: str,
         source_code: str = None,
     ) -> List[ASTNode]:
-    # reading src_code
-        if source_code is None:
-            try:
-                source_code = file_path.read_text(encoding="utf-8", errors="ignore")
-            except Exception as e:
-                logger.error(f"Cannot read {file_path}: {e}")
+        parser = self._parsers.get(language)
+        tree = parser.infor["parser"].parse(source_code.encode("utf-8"))
+        root = tree.root_node
+        node = self._extract_nodes(root, source_code, language, extract_types=
+        _EXTRACT_TYPES.get(language,[]))
 
-        if language not in self._parsers:
-            logger.warning(f"{language} isn't supported")
-            return []
-            
+        return node
+
     def _extract_nodes(
         self,
         node,
@@ -118,7 +95,7 @@ class ASTParser:
         for child in node.children:
             if child.type in extract_types:
                 name = self._get_node_name(child, language)
-                start_line = child.start_point[0] + 1  # 0-indexed → 1-indexed
+                start_line = child.start_point[0] + 1  
                 end_line = child.end_point[0] + 1
 
                 chunk_source = "\n".join(
@@ -155,16 +132,6 @@ class ASTParser:
         return results
 
     def _get_node_name(self, node, language: str) -> str:
-        """Extract the name identifier from an AST node.
-
-        Args:
-            node: Tree-sitter node.
-            language: Programming language.
-
-        Returns:
-            Name string, or "<anonymous>" if not found.
-        """
-        # Look for 'name' or 'identifier' child
         for child in node.children:
             if child.type in ("identifier", "name", "property_identifier"):
                 return child.text.decode("utf-8")
