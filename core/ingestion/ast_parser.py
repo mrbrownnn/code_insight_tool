@@ -20,6 +20,7 @@ _LANGUAGE_MODULES = {
 }
 
 # AST node types to extract per language
+# extract including: component structure of python, javascript, java
 _EXTRACT_TYPES = {
     "python": [
         "function_definition",
@@ -67,6 +68,25 @@ class ASTParser:
         self._parsers = {}
         self._init_parsers()
 
+    def _init_parsers(self) -> None:
+        try:
+            import tree_sitter as ts
+        except ImportError:
+            logger.error("tree-sitter not installed")
+            return
+
+        for language, module_name in _LANGUAGE_MODULES.items():
+            try:
+                lang_module = __import__(module_name)
+                lang = ts.Language(lang_module.language())
+                parser = ts.Parser(lang)
+                self._parsers[language] = {
+                    "parser": parser,
+                    "language": lang,
+                }
+            except Exception as e:
+                logger.warning(f"Failed to init parser for {language}: {e}")
+
     def parse_file(
         self,
         file_path: Path,
@@ -74,7 +94,7 @@ class ASTParser:
         source_code: str = None,
     ) -> List[ASTNode]:
         parser = self._parsers.get(language)
-        tree = parser.infor["parser"].parse(source_code.encode("utf-8"))
+        tree = parser["parser"].parse(source_code.encode("utf-8"))
         root = tree.root_node
         node = self._extract_nodes(root, source_code, language, extract_types=
         _EXTRACT_TYPES.get(language,[]))
@@ -97,7 +117,6 @@ class ASTParser:
                 name = self._get_node_name(child, language)
                 start_line = child.start_point[0] + 1  
                 end_line = child.end_point[0] + 1
-
                 chunk_source = "\n".join(
                     source_lines[start_line - 1 : end_line]
                 )
@@ -121,7 +140,6 @@ class ASTParser:
 
                 results.append(ast_node)
             else:
-                # Continue searching deeper
                 results.extend(
                     self._extract_nodes(
                         child, source_code, language, extract_types,
@@ -135,13 +153,10 @@ class ASTParser:
         for child in node.children:
             if child.type in ("identifier", "name", "property_identifier"):
                 return child.text.decode("utf-8")
-
-        # For arrow functions assigned to variables
         if node.type == "arrow_function" and node.parent:
             for sibling in node.parent.children:
                 if sibling.type == "identifier":
                     return sibling.text.decode("utf-8")
-
         return "<anonymous>"
 
     def is_supported(self, language: str) -> bool:
