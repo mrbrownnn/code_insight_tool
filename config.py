@@ -1,6 +1,5 @@
 """
 Code Insight Tool — Configuration Management
-Sử dụng pydantic-settings để load config từ .env file.
 """
 
 from pathlib import Path
@@ -45,7 +44,6 @@ class Settings(BaseSettings):
         ".ts": "javascript",
         ".tsx": "javascript",
         ".java": "java",
-        ".ts": "typescript",
     }
 
     # --- Ingestion ---
