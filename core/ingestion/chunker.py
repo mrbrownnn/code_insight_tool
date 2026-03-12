@@ -29,6 +29,7 @@ class CodeChunk:
     line_end: int
     source_code: str
     content_hash: str
+    conversation_name: str
     metadata: Dict = field(default_factory=dict)
     # embedding include conversation id to make it unique, continue to chat with the past conversation
     def to_embedding_text(self) -> str:
@@ -118,11 +119,12 @@ class Chunker:
             if chunk_text.strip():
                 chunks.append(
                     CodeChunk(
+                        conversation_id=self._generate_id(),
                         chunk_id=self._generate_id(),
                         file_path=file_path,
                         language=language,
                         chunk_type="block",
-                        name=f"block_{start + 1}_{end}",
+                        conversation_name=f"block_{start + 1}_{end}",
                         parent_scope=None,
                         line_start=start + 1,
                         line_end=end,
@@ -149,11 +151,12 @@ class Chunker:
         if is_within_token_limit(node.source_code, self.max_tokens):
             return [
                 CodeChunk(
+                    conversation_id=self._generate_id(),
                     chunk_id=self._generate_id(),
                     file_path=file_path,
                     language=language,
                     chunk_type=chunk_type,
-                    name=node.name,
+                    conversation_name=node.name,
                     parent_scope=node.parent_name,
                     line_start=node.start_line,
                     line_end=node.end_line,
@@ -186,11 +189,12 @@ class Chunker:
             if chunk_text.strip():
                 chunks.append(
                     CodeChunk(
+                        conversation_id=self._generate_id(),
                         chunk_id=self._generate_id(),
                         file_path=file_path,
                         language=language,
                         chunk_type=chunk_type,
-                        name=f"{node.name}_part{part}",
+                        conversation_name=f"{node.name}_part{part}",
                         parent_scope=node.parent_name,
                         line_start=node.start_line + start,
                         line_end=node.start_line + end - 1,
@@ -229,11 +233,12 @@ class Chunker:
                     chunk_text = "\n".join(current_block)
                     chunks.append(
                         CodeChunk(
+                            conversation_id=self._generate_id(),
                             chunk_id=self._generate_id(),
                             file_path=file_path,
                             language=language,
                             chunk_type="block",
-                            name=f"imports_block_{block_start}",
+                            conversation_name=f"imports_block_{block_start}",
                             parent_scope=None,
                             line_start=block_start,
                             line_end=block_start + len(current_block) - 1,
@@ -249,11 +254,12 @@ class Chunker:
             chunk_text = "\n".join(current_block)
             chunks.append(
                 CodeChunk(
+                    conversation_id=self._generate_id(),
                     chunk_id=self._generate_id(),
                     file_path=file_path,
                     language=language,
                     chunk_type="block",
-                    name=f"imports_block_{block_start}",
+                    conversation_name=f"imports_block_{block_start}",
                     parent_scope=None,
                     line_start=block_start,
                     line_end=block_start + len(current_block) - 1,
