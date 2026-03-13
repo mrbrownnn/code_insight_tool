@@ -32,14 +32,12 @@ class GitHandler:
             Path to the cloned repository.
         """
         if project_name is None:
-            # Extract repo name from URL
             project_name = url.rstrip("/").split("/")[-1]
             if project_name.endswith(".git"):
                 project_name = project_name[:-4]
 
         target_dir = self.clone_dir / project_name
 
-        # Clean up existing clone
         if target_dir.exists():
             logger.info(f"Removing existing clone at {target_dir}")
             shutil.rmtree(target_dir)
@@ -50,14 +48,6 @@ class GitHandler:
         return target_dir
 
     def get_commit_hash(self, repo_path: Path) -> Optional[str]:
-        """Get the HEAD commit hash of a repository.
-
-        Args:
-            repo_path: Path to the Git repo.
-
-        Returns:
-            Commit hash string, or None if not a Git repo.
-        """
         try:
             repo = Repo(str(repo_path))
             return repo.head.commit.hexsha
@@ -66,14 +56,6 @@ class GitHandler:
             return None
 
     def list_all_files(self, repo_path: Path) -> list[Path]:
-        """List all files in a directory (recursively).
-
-        Args:
-            repo_path: Root path to scan.
-
-        Returns:
-            List of file paths (absolute).
-        """
         files = []
         for item in repo_path.rglob("*"):
             if item.is_file() and ".git" not in item.parts:
@@ -82,12 +64,5 @@ class GitHandler:
 
     @staticmethod
     def is_local_folder(path_str: str) -> bool:
-        """Check if the input is a local folder (not a Git URL).
-
-        Args:
-            path_str: Input path or URL string.
-
-        Returns:
-            True if it looks like a local path.
-        """
+        logger.info(f"Path {path_str} is a valid local folder")
         return Path(path_str).exists() and Path(path_str).is_dir()

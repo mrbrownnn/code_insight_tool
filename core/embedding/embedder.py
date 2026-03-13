@@ -15,8 +15,6 @@ logger = get_logger(__name__)
 
 
 class CodeEmbedder:
-    """Generates code embeddings using microsoft/unixcoder-base."""
-
     def __init__(self, model_name: str = None):
         self.model_name = model_name or settings.embedding_model
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -36,16 +34,7 @@ class CodeEmbedder:
         logger.info(f"Model loaded successfully ({self.device})")
 
     def embed(self, text: str) -> List[float]:
-        """Generate embedding for a single text.
-
-        Args:
-            text: Code or text to embed.
-
-        Returns:
-            Embedding vector as a list of floats.
-        """
         self._load_model()
-
         tokens = self._tokenizer(
             text,
             return_tensors="pt",

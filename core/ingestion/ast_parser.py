@@ -39,17 +39,13 @@ _EXTRACT_TYPES = {
     ],
 }
 
-
 @dataclass
 class ASTNode:
-    """Represents an extracted code structure node."""
-
     node_type: str          # e.g., "function_definition", "class_definition"
     name: str               # e.g., "authenticate_user"
     start_line: int         # 1-indexed
     end_line: int           # 1-indexed
-    source_code: str        # Raw source text of this node
-    language: str
+    source_code: str      
     children: List["ASTNode"] = field(default_factory=list)
     parent_name: Optional[str] = None
 
@@ -84,13 +80,19 @@ class ASTParser:
         language: str,
         source_code: str = None,
     ) -> List[ASTNode]:
-        parser = self._parsers.get(language)
-        tree = parser["parser"].parse(source_code.encode("utf-8"))
-        root = tree.root_node
-        node = self._extract_nodes(root, source_code, language, extract_types=
-        _EXTRACT_TYPES.get(language,[]))
-
-        return node
+        # exceptions will be caught and logged, returning empty list on failure
+        if source_code is None:
+            source_code = file_path.read_text(encoding="utf-8")
+        try:
+            parser = self._parsers.get(language)
+            tree = parser["parser"].parse(source_code.encode("utf-8"))
+            root = tree.root_node
+            node = self._extract_nodes(root, source_code, language, extract_types=
+            _EXTRACT_TYPES.get(language,[]))
+            return node
+        except Exception as e:
+            logger.error(f"Error parsing {file_path} ({language}): {e}")
+            return []
 
     def _extract_nodes(
         self,
@@ -154,7 +156,7 @@ class ASTParser:
         return language in self._parsers
 
 
-if __name__ == "__ast.parser__":
+if __name__ == "__main__":
     parser = ASTParser()
     parser.parse_file(
         file_path=Path("test.py"),

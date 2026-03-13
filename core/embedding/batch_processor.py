@@ -14,8 +14,6 @@ logger = get_logger(__name__)
 
 
 class BatchProcessor:
-    """Processes code chunks in batches: embed → store in Qdrant."""
-
     def __init__(
         self,
         embedder: CodeEmbedder = None,
@@ -34,20 +32,14 @@ class BatchProcessor:
     ) -> int:
         total = len(chunks)
         total_stored = 0
-
         logger.info(f"Processing {total} chunks in batches of {self.batch_size}")
-
         for i in range(0, total, self.batch_size):
             batch = chunks[i : i + self.batch_size]
-
             texts = [chunk.to_embedding_text() for chunk in batch]
-
             vectors = self.embedder.embed_batch(texts)
 
-            # Prepare payloads for Qdrant
             payloads = [chunk.to_dict() for chunk in batch]
 
-            # Upsert to vector store
             stored = self.vector_store.upsert_chunks(
                 chunks=payloads,
                 vectors=vectors,

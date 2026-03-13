@@ -42,33 +42,9 @@ class VectorStore:
     ) -> None:
         name = collection_name or settings.qdrant_collection_name
         size = vector_size or settings.embedding_dim
-
-        # Check if collection already exists
-        collections = self.client.get_collections().collections
-        existing_names = [c.name for c in collections]
-
-        if name in existing_names:
-            logger.info(f"Collection '{name}' already exists, skipping creation")
-            return
-
-        self.client.create_collection(
-            collection_name=name,
-            vectors_config=VectorParams(
-                size=size,
-                distance=Distance.COSINE,
-            ),
-        )
-        logger.info(f"Created collection '{name}' (vector_size={size}, cosine)")
-        name = collection_name or settings.qdrant_collection_name
-        size = vector_size or settings.embedding_dim
-
-        # Check if collection already exists
-        collections = self.client.get_collections().collections
-        existing_names = [c.name for c in collections]
-
-        if name in existing_names:
-            logger.info(f"Collection '{name}' already exists, skipping creation")
-            return
+        #create connection to qdrant
+        self.client = QdrantClient(host=self.host, port=self.port)
+        logger.info(f"Connected to Qdrant at {self.host}:{self.port}")
 
         self.client.create_collection(
             collection_name=name,

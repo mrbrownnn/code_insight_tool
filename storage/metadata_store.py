@@ -6,12 +6,10 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
-
-DB_PATH = Path("data/metadata.db")
+DB_PATH = Path("storage/metadata.db")
 
 
 class MetadataStore:
@@ -23,17 +21,37 @@ class MetadataStore:
         self._init_db()
 
     def _get_conn(self) -> sqlite3.Connection:
-        """Get a database connection with row factory."""
         conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
         return conn
 
     def _init_db(self) -> None:
-        """Initialize database tables."""
         conn = self._get_conn()
         try:
-            #SQL query to create table
-           # conn.commit()
+            conn.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS projects (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                path TEXT NOT NULL,
+                commit_hash TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                indexed_at TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS index_stats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                total_files INTEGER,
+                total_chunks INTEGER,
+                total_errors INTEGER,
+                duration_seconds REAL,
+                indexed_at TEXT,
+                FOREIGN KEY(project_id) REFERENCES projects(id)
+            );
+            """
+        )
+            conn.commit()
             logger.info(f"Metadata DB initialized at {self.db_path}")
         finally:
             conn.close()
@@ -44,16 +62,6 @@ class MetadataStore:
         path: str,
         commit_hash: Optional[str] = None,
     ) -> int:
-        """Create a new project record.
-
-        Args:
-            name: Project name.
-            path: Source path (Git URL or local folder).
-            commit_hash: Git commit hash at index time.
-
-        Returns:
-            Project ID.
-        """
         now = datetime.now(timezone.utc).isoformat()
         conn = self._get_conn()
         try:

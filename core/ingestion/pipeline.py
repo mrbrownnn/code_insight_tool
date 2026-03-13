@@ -1,7 +1,7 @@
 """
 Ingestion Pipeline — end-to-end orchestrator.
 Git/Local → Filter → Parse → Chunk → Embed → Store.
-"""
+""" 
 
 import time
 from dataclasses import dataclass
@@ -56,16 +56,7 @@ class IngestionPipeline:
         project_name: Optional[str] = None,
         progress_callback: Optional[Callable[[str, float], None]] = None,
     ) -> IngestionResult:
-        """Run the full ingestion pipeline.
-
-        Args:
-            source: Git URL or local folder path.
-            project_name: Optional project name (auto-detected if None).
-            progress_callback: Optional callback(stage_name, percent) for UI.
-
-        Returns:
-            IngestionResult with stats.
-        """
+        logger.info(f"Running ingestion pipeline for {source}")
         start_time = time.time()
         errors = []
 
@@ -186,15 +177,6 @@ class IngestionPipeline:
         file_info: FileInfo,
         repo_path: Path,
     ) -> List[CodeChunk]:
-        """Parse and chunk a single file.
-
-        Args:
-            file_info: File metadata.
-            repo_path: Root repo path.
-
-        Returns:
-            List of CodeChunks from this file.
-        """
         source_code = file_info.path.read_text(encoding="utf-8", errors="ignore")
 
         # Try AST parsing
