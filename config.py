@@ -16,7 +16,13 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
-
+    #LangChain settings
+    llm_model: str = "qwen2.5-coder"
+    llm_temperature: float = 0.25
+    rate_limit = 5  # Max requests per second to Ollama
+    memory_settings: dict = {
+        "k": 5,  # Number of past interactions to remember
+    }
     # --- Qdrant ---
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
