@@ -5,6 +5,7 @@ Code Insight Tool — Configuration Management
 from pathlib import Path
 from typing import List
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,10 +17,14 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
     )
-    #LangChain settings
-    llm_model: str = "qwen2.5-coder"
+    # ========================================================================
+    # LLM Settings (Self-hosted Ollama as PRIMARY)
+    # ========================================================================
+    llm_model: str = "qwen2.5-coder"  # Primary: Ollama local model
     llm_temperature: float = 0.25
-    rate_limit: int = 10  # Max requests per second to Ollama
+    max_tokens: int = 2048  # Max output tokens
+    top_p: float = 0.95  # Nucleus sampling
+    rate_limit: int = 10  # Max requests per minute
     memory_settings: dict = {
         "k": 5,  # Number of past interactions to remember
     }
@@ -28,8 +33,8 @@ class Settings(BaseSettings):
     qdrant_port: int = 6333
     qdrant_collection_name: str = "code_chunks"
 
-    # --- Ollama (Self-hosted LLM) ---
-    ollama_host: str = "http://localhost:11434"
+    # --- Ollama (Self-hosted LLM - PRIMARY) ---
+    ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen2.5-coder"
 
     # --- Embedding ---
@@ -76,8 +81,25 @@ class Settings(BaseSettings):
     # --- Memory & History ---
     memory_k: int = 5  # Number of past interactions to remember
 
-    # --- API Keys & External Services ---
-    api_key: str = "your_api_key_here"
+    # ========================================================================
+    # API Keys (OPTIONAL - Backup providers if Ollama fails)
+    # ========================================================================
+    gemini_api_key: str = Field(
+        default="",
+        description="Google Gemini API key (backup provider)"
+    )
+    groq_api_key: str = Field(
+        default="",
+        description="Groq API key (backup provider)"
+    )
+    huggingface_api_key: str = Field(
+        default="",
+        description="HuggingFace API key"
+    )
+    api_key: str = Field(
+        default="",
+        description="Generic API key"
+    )
 
     # --- Logging ---
     log_level: str = "INFO"
