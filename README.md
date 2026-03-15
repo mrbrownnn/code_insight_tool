@@ -1,8 +1,8 @@
-# 🔍 Code Insight Tool
+# ✨✨✨ Code Insight Tool ✨✨✨
 
 AI-powered codebase understanding and search tool. Index your source code, then ask questions about it using natural language.
 
-## ✨ Features
+## Features
 
 - **AST-Based Code Parsing** — Tree-sitter parses Python, JavaScript, Java into structured chunks
 - **Smart Chunking** — Code split by function/class/method (not arbitrary lines)
@@ -10,7 +10,7 @@ AI-powered codebase understanding and search tool. Index your source code, then 
 - **100% Self-Hosted** — All data stays local: code, embeddings, LLM inference
 - **Streamlit UI** — Web-based interface with progress tracking
 
-## 🏗️ Tech Stack
+##  Tech Stack
 
 | Component | Technology |
 |-----------|-----------|

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     #LangChain settings
     llm_model: str = "qwen2.5-coder"
     llm_temperature: float = 0.25
-    rate_limit = 5  # Max requests per second to Ollama
+    rate_limit: int = 10  # Max requests per second to Ollama
     memory_settings: dict = {
         "k": 5,  # Number of past interactions to remember
     }
@@ -56,6 +56,28 @@ class Settings(BaseSettings):
     max_file_size_bytes: int = 1_048_576  # 1MB
     batch_size: int = 32
     clone_dir: Path = Path("./tmp/repos")
+
+    # --- Retrieval (Hybrid Search) ---
+    # RRF & Fusion parameters
+    top_k_bm25: int = 20  # Fetch many before fusion
+    top_k_vector: int = 20  # Fetch many before fusion
+    top_k_final: int = 5  # Final results after fusion
+    rrf_k: int = 60  # RRF constant (default 60)
+    fusion_alpha: float = 0.5  # Percentile fusion: 0.5=equal BM25/vector, 0-1 range
+    
+    # Context expansion
+    max_context_tokens: int = 4000  # Hard limit after expansion
+    
+    # Boosting parameters
+    retrieval_exact_match_boost: float = 2.0  # Scalar multiplier for exact matches
+    retrieval_min_chunk_length: int = 5  # Min lines, below triggers penalty
+    retrieval_short_chunk_penalty: float = 0.5  # Multiplier for short chunks
+
+    # --- Memory & History ---
+    memory_k: int = 5  # Number of past interactions to remember
+
+    # --- API Keys & External Services ---
+    api_key: str = "your_api_key_here"
 
     # --- Logging ---
     log_level: str = "INFO"
