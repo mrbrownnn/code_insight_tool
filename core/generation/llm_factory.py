@@ -3,11 +3,11 @@ import os
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from langchain_core.chat_models import ChatOllama
+from langchain.chat_models import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
-from langchain_core.schema.language_model import BaseLLM
+from langchain.schema.language_model import BaseLLM
 
 from config import Settings
 
@@ -21,7 +21,7 @@ class LLMProvider(ABC):
 class OllamaProvider(LLMProvider):
     def __init__(self, config: Settings):
         self.config = config
-    
+
     def get_llm(self) -> BaseLLM:
         return ChatOllama(
             model=self.config.ollama_model,
@@ -32,12 +32,10 @@ class OllamaProvider(LLMProvider):
 class OpenAIProvider(LLMProvider):
     def __init__(self, config: Settings):
         self.config = config
-    
     def get_llm(self) -> BaseLLM:
         api_key = self.config.openai_api_key or os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY not found")
-        
         return ChatOpenAI(
             model=self.config.llm_model,
             api_key=api_key,
@@ -48,12 +46,11 @@ class OpenAIProvider(LLMProvider):
 class GeminiProvider(LLMProvider):
     def __init__(self, config: Settings):
         self.config = config
-    
     def get_llm(self) -> BaseLLM:
         api_key = self.config.gemini_api_key or os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ValueError("GEMINI_API_KEY not found")
-        
+
         return ChatGoogleGenerativeAI(
             model=self.config.llm_model,
             api_key=api_key,
@@ -66,7 +63,6 @@ class GeminiProvider(LLMProvider):
 class GroqProvider(LLMProvider):
     def __init__(self, config: Settings):
         self.config = config
-    
     def get_llm(self) -> BaseLLM:
         api_key = self.config.groq_api_key or os.getenv("GROQ_API_KEY")
         if not api_key:
@@ -92,12 +88,9 @@ class LLMFactory:
     def get_llm(self, provider_name: Optional[str] = None) -> BaseLLM:
         if provider_name is None:
             provider_name = self._detect_provider()
-        
         if provider_name not in self._providers:
             raise ValueError(f"Unknown provider: {provider_name}")
-        
         return self._providers[provider_name].get_llm()
-    
     def _detect_provider(self) -> str:
         model = self.config.llm_model.lower()
         switch: dict[str, list[str]] = {
